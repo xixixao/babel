@@ -484,7 +484,7 @@ export default class StatementParser extends ExpressionParser {
           sawDefault = true;
           cur.test = null;
         }
-        this.expect(tt.colon);
+        this.expectLenient(tt.colon);
       } else {
         if (cur) {
           cur.consequent.push(this.parseStatement(true));
@@ -521,11 +521,11 @@ export default class StatementParser extends ExpressionParser {
       const clause = this.startNode();
       this.next();
       if (this.match(tt.parenL)) {
-        this.expect(tt.parenL);
+        this.expectLenient(tt.parenL);
         clause.param = this.parseBindingAtom();
         const clashes: any = Object.create(null);
         this.checkLVal(clause.param, true, clashes, "catch clause");
-        this.expect(tt.parenR);
+        this.expectLenient(tt.parenR);
       } else {
         this.expectPlugin("optionalCatchBinding");
         clause.param = null;
@@ -1713,7 +1713,7 @@ export default class StatementParser extends ExpressionParser {
           );
         }
 
-        this.expect(tt.comma);
+        this.expectLenient(tt.comma);
         if (this.eat(tt.braceR)) break;
       }
 
