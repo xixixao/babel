@@ -114,6 +114,14 @@ export default class UtilParser extends Tokenizer {
     }
   }
 
+  expectBraceOrIndent(): void {
+    if (this.match(tt.braceL)) {
+      this.eat(tt.braceL);
+    } else if (!this.matchIndent()) {
+      this.unexpected(null, tt.braceL);
+    }
+  }
+
   // Raise an unexpected token error. Can take the expected token type
   // instead of a message string.
 

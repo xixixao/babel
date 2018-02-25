@@ -47,7 +47,13 @@ class Node implements NodeBase {
 export class NodeUtils extends UtilParser {
   startNode<T: NodeType>(): T {
     // $FlowIgnore
-    return new Node(this, this.state.start, this.state.startLoc);
+    const newNode = new Node(this, this.state.start, this.state.startLoc);
+    if (this.hasPlugin("lenient")) {
+      newNode.extra = newNode.extra || {};
+      newNode.extra.indent = this.state.indent;
+    }
+    // $FlowIgnore
+    return newNode;
   }
 
   startNodeAt<T: NodeType>(pos: number, loc: Position): T {

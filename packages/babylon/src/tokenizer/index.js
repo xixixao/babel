@@ -8,7 +8,12 @@ import {
   isIdentifierChar,
   isKeyword,
 } from "../util/identifier";
-import { types as tt, keywords as keywordTypes, type TokenType } from "./types";
+import {
+  types as tt,
+  keywords as keywordTypes,
+  type Node as NodeType,
+  type TokenType,
+} from "./types";
 import { type TokContext, types as ct } from "./context";
 import LocationParser from "../parser/location";
 import { SourceLocation } from "../util/location";
@@ -171,18 +176,25 @@ export default class Tokenizer extends LocationParser {
   // that's more indented than the previous line
   matchIndent(): boolean {
     return (
+      this.hasPlugin("lenient") &&
       this.isRightAfterIdent() &&
       (this.state.indent || 0) > this.state.lastIndent
     );
   }
 
   // Whether the current token is at the begining of a line
-  // that's less indented than the previous line
-  matchDedent(): boolean {
-    return (
+  // that's less indented than the given node
+  matchDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
+    if (
+      this.hasPlugin("lenient") &&
       this.isRightAfterIdent() &&
-      (this.state.indent || 0) < this.state.lastIndent
-    );
+      (this.state.indent || 0) < node.extra.indent
+    ) {
+      // We want to support trailing `}` even in lenient mode
+      this.eat(end);
+      return true;
+    }
+    return false;
   }
 
   isRightAfterIdent(): boolean {

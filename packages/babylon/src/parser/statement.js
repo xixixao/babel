@@ -392,7 +392,7 @@ export default class StatementParser extends ExpressionParser {
       forAwait = true;
       this.next();
     }
-    this.expect(tt.parenL);
+    this.expectLenient(tt.parenL);
 
     if (this.match(tt.semi)) {
       if (forAwait) {
@@ -401,10 +401,19 @@ export default class StatementParser extends ExpressionParser {
       return this.parseFor(node, null);
     }
 
-    if (this.match(tt._var) || this.match(tt._let) || this.match(tt._const)) {
+    const lenientInit = this.hasPlugin("lenient") && this.match(tt.name);
+
+    if (
+      this.match(tt._var) ||
+      this.match(tt._let) ||
+      this.match(tt._const) ||
+      lenientInit
+    ) {
       const init = this.startNode();
-      const varKind = this.state.type;
-      this.next();
+      const varKind = lenientInit ? tt._const : this.state.type;
+      if (!lenientInit) {
+        this.next();
+      }
       this.parseVar(init, true, varKind);
       this.finishNode(init, "VariableDeclaration");
 
@@ -488,7 +497,7 @@ export default class StatementParser extends ExpressionParser {
     this.next();
     node.discriminant = this.parseParenExpression();
     const cases = (node.cases = []);
-    this.expect(tt.braceL);
+    this.expectBraceOrIndent();
     this.state.labels.push(switchLabel);
 
     // Statements under must be grouped (by label) in SwitchCase
@@ -519,6 +528,9 @@ export default class StatementParser extends ExpressionParser {
         } else {
           this.unexpected();
         }
+      }
+      if (cur && this.matchDedent(cur)) {
+        break;
       }
     }
     if (cur) this.finishNode(cur, "SwitchCase");
@@ -709,7 +721,7 @@ export default class StatementParser extends ExpressionParser {
     let oldStrict;
     let octalPosition;
 
-    while (!(this.eat(end) || this.matchDedent())) {
+    while (!this.eat(end)) {
       if (!parsedNonDirective && this.state.containsOctal && !octalPosition) {
         octalPosition = this.state.octalPosition;
       }
@@ -734,6 +746,9 @@ export default class StatementParser extends ExpressionParser {
 
       parsedNonDirective = true;
       body.push(stmt);
+      if (this.matchDedent(stmt, end)) {
+        break;
+      }
     }
 
     if (oldStrict === false) {
@@ -754,7 +769,7 @@ export default class StatementParser extends ExpressionParser {
     node.test = this.match(tt.semi) ? null : this.parseExpression();
     this.expect(tt.semi);
     node.update = this.match(tt.parenR) ? null : this.parseExpression();
-    this.expect(tt.parenR);
+    this.expectLenient(tt.parenR);
     node.body = this.parseStatement(false, true);
     this.state.labels.pop();
     return this.finishNode(node, "ForStatement");
@@ -779,7 +794,7 @@ export default class StatementParser extends ExpressionParser {
     }
     node.left = init;
     node.right = this.parseExpression();
-    this.expect(tt.parenR);
+    this.expectLenient(tt.parenR);
     node.body = this.parseStatement(false, true);
     this.state.labels.pop();
     return this.finishNode(node, type);
@@ -957,7 +972,7 @@ export default class StatementParser extends ExpressionParser {
 
     classBody.body = [];
 
-    this.expect(tt.braceL);
+    this.expectBraceOrIndent();
 
     while (!this.eat(tt.braceR)) {
       if (this.eat(tt.semi)) {
@@ -996,6 +1011,9 @@ export default class StatementParser extends ExpressionParser {
           member.start,
           "Stage 2 decorators may only be used with a class or a class method",
         );
+      }
+      if (this.matchDedent(member)) {
+        break;
       }
     }
 
