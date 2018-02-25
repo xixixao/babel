@@ -51,8 +51,10 @@ export default class State {
     // $FlowIgnore
     this.commentPreviousNode = null;
 
-    this.pos = this.lineStart = 0;
+    this.pos = this.lineStart = this.lastIndent = 0;
+    this.insideIndent = true;
     this.curLine = options.startLine;
+    this.indent = null;
 
     this.type = tt.eof;
     this.value = null;
@@ -147,6 +149,13 @@ export default class State {
   pos: number;
   lineStart: number;
   curLine: number;
+
+  // The indent amount of previous line
+  lastIndent: number;
+  // The current line's indent, null while `insideIndent` is true
+  indent: ?number;
+  // Whether we are in whitespace at the beginning of the current line
+  insideIndent: boolean;
 
   // Properties of the current token:
   // Its type

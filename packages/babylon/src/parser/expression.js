@@ -150,9 +150,15 @@ export default class ExpressionParser extends LValParser {
       left = afterLeftParse.call(this, left, startPos, startLoc);
     }
     if (this.state.type.isAssign) {
+      if (this.hasPlugin("lenient") && this.match(tt.eq)) {
+        this.raise(
+          this.state.start,
+          "You're using `=` in an expression, use `let` and `:=` instead.",
+        );
+      }
       const node = this.startNodeAt(startPos, startLoc);
       const operator = this.state.value;
-      node.operator = operator;
+      node.operator = this.match(tt.reassign) ? "=" : operator;
 
       if (operator === "??=") {
         this.expectPlugin("nullishCoalescingOperator");
@@ -161,9 +167,10 @@ export default class ExpressionParser extends LValParser {
       if (operator === "||=" || operator === "&&=") {
         this.expectPlugin("logicalAssignment");
       }
-      node.left = this.match(tt.eq)
-        ? this.toAssignable(left, undefined, "assignment expression")
-        : left;
+      node.left =
+        this.match(tt.eq) || this.match(tt.reassign)
+          ? this.toAssignable(left, undefined, "assignment expression")
+          : left;
       refShorthandDefaultPos.start = 0; // reset because shorthand default was used correctly
 
       this.checkLVal(left, undefined, undefined, "assignment expression");
@@ -994,9 +1001,9 @@ export default class ExpressionParser extends LValParser {
   }
 
   parseParenExpression(): N.Expression {
-    this.expect(tt.parenL);
+    this.expectLenient(tt.parenL);
     const val = this.parseExpression();
-    this.expect(tt.parenR);
+    this.expectLenient(tt.parenR);
     return val;
   }
 

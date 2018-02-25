@@ -127,6 +127,7 @@ export const types: { [name: string]: TokenType } = {
   // in AssignmentExpression nodes.
 
   eq: new TokenType("=", { beforeExpr, isAssign }),
+  reassign: new TokenType(":=", { beforeExpr, isAssign }),
   assign: new TokenType("_=", { beforeExpr, isAssign }),
   incDec: new TokenType("++/--", { prefix, postfix, startsExpr }),
   bang: new TokenType("!", { beforeExpr, prefix, startsExpr }),

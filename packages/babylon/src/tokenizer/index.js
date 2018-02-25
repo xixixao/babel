@@ -167,6 +167,28 @@ export default class Tokenizer extends LocationParser {
     return this.state.type === type;
   }
 
+  // Whether the current token is at the begining of a line
+  // that's more indented than the previous line
+  matchIndent(): boolean {
+    return (
+      this.isRightAfterIdent() &&
+      (this.state.indent || 0) > this.state.lastIndent
+    );
+  }
+
+  // Whether the current token is at the begining of a line
+  // that's less indented than the previous line
+  matchDedent(): boolean {
+    return (
+      this.isRightAfterIdent() &&
+      (this.state.indent || 0) < this.state.lastIndent
+    );
+  }
+
+  isRightAfterIdent(): boolean {
+    return this.state.start === this.state.lineStart + (this.state.indent || 0);
+  }
+
   // TODO
 
   isKeyword(word: string): boolean {
@@ -218,6 +240,10 @@ export default class Tokenizer extends LocationParser {
     this.state.octalPosition = null;
     this.state.start = this.state.pos;
     this.state.startLoc = this.state.curPosition();
+    if (this.state.insideIndent) {
+      this.state.insideIndent = false;
+      this.state.indent = this.state.start - this.state.lineStart;
+    }
     if (this.state.pos >= this.input.length) {
       this.finishToken(tt.eof);
       return;
@@ -349,6 +375,8 @@ export default class Tokenizer extends LocationParser {
           ++this.state.pos;
           ++this.state.curLine;
           this.state.lineStart = this.state.pos;
+          this.state.insideIndent = true;
+          this.state.lastIndent = this.state.indent || 0;
           break;
 
         case charCodes.slash:
@@ -713,6 +741,11 @@ export default class Tokenizer extends LocationParser {
           this.input.charCodeAt(this.state.pos + 1) === charCodes.colon
         ) {
           this.finishOp(tt.doubleColon, 2);
+        } else if (
+          this.hasPlugin("lenient") &&
+          this.input.charCodeAt(this.state.pos + 1) === charCodes.equalsTo
+        ) {
+          this.finishOp(tt.reassign, 2);
         } else {
           ++this.state.pos;
           this.finishToken(tt.colon);
