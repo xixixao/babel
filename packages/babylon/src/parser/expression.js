@@ -520,7 +520,7 @@ export default class ExpressionParser extends LValParser {
         return this.finishNode(node, "OptionalMemberExpression");
       }
       return this.finishNode(node, "MemberExpression");
-    } else if (this.eat(tt.bracketL)) {
+    } else if (!this.matchNoIndent() && this.eat(tt.bracketL)) {
       const node = this.startNodeAt(startPos, startLoc);
       node.object = base;
       node.property = this.parseExpression();
@@ -1682,7 +1682,8 @@ export default class ExpressionParser extends LValParser {
 
   // Parse function body and check parameters.
   parseFunctionBody(node: N.Function, allowExpression: ?boolean): void {
-    const isExpression = allowExpression && !this.match(tt.braceL);
+    const isExpression =
+      allowExpression && !this.match(tt.braceL) && !this.matchIndent();
 
     const oldInParameters = this.state.inParameters;
     const oldInAsync = this.state.inAsync;
@@ -1704,6 +1705,19 @@ export default class ExpressionParser extends LValParser {
       this.state.inFunction = oldInFunc;
       this.state.inGenerator = oldInGen;
       this.state.labels = oldLabels;
+      if (
+        this.hasPlugin("lenient") &&
+        node.body.type === "BlockStatement" &&
+        node.body.body.length === 1
+      ) {
+        const singleBodyStatement = node.body.body[0];
+        if (
+          singleBodyStatement.type === "ExpressionStatement" &&
+          this.state.lastTokType === tt.semi
+        ) {
+          node.body = singleBodyStatement.expression;
+        }
+      }
     }
     this.state.inAsync = oldInAsync;
 

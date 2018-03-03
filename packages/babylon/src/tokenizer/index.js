@@ -152,6 +152,7 @@ export default class Tokenizer extends LocationParser {
     this.state.lastTokStart = this.state.start;
     this.state.lastTokEndLoc = this.state.endLoc;
     this.state.lastTokStartLoc = this.state.startLoc;
+    this.state.lastTokType = this.state.type;
     this.nextToken();
   }
 
@@ -177,8 +178,16 @@ export default class Tokenizer extends LocationParser {
   matchIndent(): boolean {
     return (
       this.hasPlugin("lenient") &&
-      this.isRightAfterIdent() &&
+      this.isRightAfterIndent() &&
       (this.state.indent || 0) > this.state.lastIndent
+    );
+  }
+
+  matchNoIndent(): boolean {
+    return (
+      this.hasPlugin("lenient") &&
+      this.isRightAfterIndent() &&
+      (this.state.indent || 0) <= this.state.lastIndent
     );
   }
 
@@ -187,7 +196,7 @@ export default class Tokenizer extends LocationParser {
   matchDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
     if (
       this.hasPlugin("lenient") &&
-      this.isRightAfterIdent() &&
+      this.isRightAfterIndent() &&
       (this.state.indent || 0) < node.extra.indent
     ) {
       // We want to support trailing `}` even in lenient mode
@@ -197,7 +206,7 @@ export default class Tokenizer extends LocationParser {
     return false;
   }
 
-  isRightAfterIdent(): boolean {
+  isRightAfterIndent(): boolean {
     return this.state.start === this.state.lineStart + (this.state.indent || 0);
   }
 
