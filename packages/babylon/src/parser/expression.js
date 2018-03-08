@@ -1713,7 +1713,8 @@ export default class ExpressionParser extends LValParser {
         const singleBodyStatement = node.body.body[0];
         if (
           singleBodyStatement.type === "ExpressionStatement" &&
-          this.state.lastTokType !== tt.semi
+          this.state.lastTokType !== tt.semi &&
+          this.state.lastTokType !== tt.braceR
         ) {
           node.body = singleBodyStatement.expression;
         }
