@@ -483,7 +483,7 @@ export default class StatementParser extends ExpressionParser {
     // optional arguments, we eagerly look for a semicolon or the
     // possibility to insert one.
 
-    if (this.isLineTerminator()) {
+    if (this.isLineTerminator() && !this.matchIndent()) {
       node.argument = null;
     } else {
       node.argument = this.parseExpression();
@@ -671,7 +671,11 @@ export default class StatementParser extends ExpressionParser {
     expr: N.Expression,
   ): N.ExpressionStatement {
     node.expression = expr;
-    this.semicolon();
+    if (this.hasPlugin("lenient")) {
+      this.eat(tt.semi);
+    } else {
+      this.semicolon();
+    }
     return this.finishNode(node, "ExpressionStatement");
   }
 

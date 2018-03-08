@@ -700,7 +700,6 @@ export default class ExpressionParser extends LValParser {
   parseExprAtom(refShorthandDefaultPos?: ?Pos): N.Expression {
     const canBeArrow = this.state.potentialArrowAt === this.state.start;
     let node;
-
     switch (this.state.type) {
       case tt._super:
         if (
@@ -1707,13 +1706,14 @@ export default class ExpressionParser extends LValParser {
       this.state.labels = oldLabels;
       if (
         this.hasPlugin("lenient") &&
+        allowExpression &&
         node.body.type === "BlockStatement" &&
         node.body.body.length === 1
       ) {
         const singleBodyStatement = node.body.body[0];
         if (
           singleBodyStatement.type === "ExpressionStatement" &&
-          this.state.lastTokType === tt.semi
+          this.state.lastTokType !== tt.semi
         ) {
           node.body = singleBodyStatement.expression;
         }
