@@ -196,8 +196,9 @@ export default class Tokenizer extends LocationParser {
   matchDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
     if (
       this.hasPlugin("lenient") &&
-      this.isRightAfterIndent() &&
-      (this.state.indent || 0) < node.extra.indent
+      ((this.isRightAfterIndent() &&
+        (this.state.indent || 0) < node.extra.indent) ||
+        this.match(tt.eof))
     ) {
       // We want to support trailing `}` even in lenient mode
       this.eat(end);
