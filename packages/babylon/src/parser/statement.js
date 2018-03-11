@@ -199,7 +199,10 @@ export default class StatementParser extends ExpressionParser {
         } else if (this.hasPlugin("lenient")) {
           const state = this.state.clone();
           this.next();
-          if (this.match(tt.eq)) {
+          if (
+            this.match(tt.eq) ||
+            (this.eat(tt.colon) && !this.matchNoIndent())
+          ) {
             if (!declaration) this.unexpected();
             this.state = state;
             return this.parseVarStatement(node, tt._const, false);
