@@ -106,11 +106,15 @@ export default class UtilParser extends Tokenizer {
     this.eat(type) || this.unexpected(pos, type);
   }
 
-  expectLenient(type: TokenType, pos?: ?number): void {
+  // Returns whether the token was faked for lenient mode
+
+  expectLenient(type: TokenType, pos?: ?number): boolean {
     if (this.hasPlugin("lenient") && !this.match(type)) {
       this.insertFakeToken(type);
+      return true;
     } else {
       this.eat(type) || this.unexpected(pos, type);
+      return false;
     }
   }
 

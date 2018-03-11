@@ -685,8 +685,8 @@ export default class StatementParser extends ExpressionParser {
 
   parseBlock(allowDirectives?: boolean): N.BlockStatement {
     const node = this.startNode();
-    this.expectLenient(tt.braceL);
-    this.parseBlockBody(node, allowDirectives, false, tt.braceR);
+    const end = this.expectLenient(tt.braceL) ? tt.dedent : tt.braceR;
+    this.parseBlockBody(node, allowDirectives, false, end);
     return this.finishNode(node, "BlockStatement");
   }
 
@@ -725,7 +725,7 @@ export default class StatementParser extends ExpressionParser {
     let oldStrict;
     let octalPosition;
 
-    while (!this.eat(end)) {
+    while (end === tt.dedent || !this.eat(end)) {
       if (!parsedNonDirective && this.state.containsOctal && !octalPosition) {
         octalPosition = this.state.octalPosition;
       }
@@ -750,7 +750,7 @@ export default class StatementParser extends ExpressionParser {
 
       parsedNonDirective = true;
       body.push(stmt);
-      if (this.matchDedent(stmt, end)) {
+      if (end === tt.dedent && this.matchDedent(stmt, end)) {
         break;
       }
     }
