@@ -1687,12 +1687,13 @@ export default class ExpressionParser extends LValParser {
   parseFunctionBody(node: N.Function, allowExpression: ?boolean): void {
     const isExpression =
       allowExpression &&
-      ((this.hasPlugin("lenient") &&
-        !this.hasPlugin("lenientCompat") &&
-        (!this.match(tt.braceL) || this.state.input[this.state.pos] !== ";")) ||
-        !this.match(tt.braceL)) &&
-      !this.matchIndent();
-    // console.log(isExpression, this.state.input);
+      (!this.hasPlugin("lenient")
+        ? !this.match(tt.braceL)
+        : this.hasPlugin("lenientCompat")
+          ? !this.match(tt.braceL) && !this.matchIndent()
+          : this.match(tt.braceL)
+            ? this.state.input[this.state.pos] !== ";"
+            : !this.matchIndent());
 
     const oldInParameters = this.state.inParameters;
     const oldInAsync = this.state.inAsync;
