@@ -150,10 +150,14 @@ export default class ExpressionParser extends LValParser {
       left = afterLeftParse.call(this, left, startPos, startLoc);
     }
     if (this.state.type.isAssign) {
-      if (this.hasPlugin("lenient") && this.match(tt.eq)) {
+      if (
+        this.hasPlugin("lenient") &&
+        !this.hasPlugin("lenientCompat") &&
+        this.match(tt.eq)
+      ) {
         this.raise(
           this.state.start,
-          "You're using `=` in an expression, use `let` and `:=` instead.",
+          "You're using `=` in an expression, use `:=` (and `let`) instead.",
         );
       }
       const node = this.startNodeAt(startPos, startLoc);
@@ -531,7 +535,7 @@ export default class ExpressionParser extends LValParser {
         return this.finishNode(node, "OptionalMemberExpression");
       }
       return this.finishNode(node, "MemberExpression");
-    } else if (!noCalls && this.match(tt.parenL)) {
+    } else if (!noCalls && !this.matchNoIndent() && this.match(tt.parenL)) {
       const possibleAsync = this.atPossibleAsync(base);
       this.next();
 
@@ -1682,7 +1686,13 @@ export default class ExpressionParser extends LValParser {
   // Parse function body and check parameters.
   parseFunctionBody(node: N.Function, allowExpression: ?boolean): void {
     const isExpression =
-      allowExpression && !this.match(tt.braceL) && !this.matchIndent();
+      allowExpression &&
+      ((this.hasPlugin("lenient") &&
+        !this.hasPlugin("lenientCompat") &&
+        (!this.match(tt.braceL) || this.state.input[this.state.pos] !== ";")) ||
+        !this.match(tt.braceL)) &&
+      !this.matchIndent();
+    // console.log(isExpression, this.state.input);
 
     const oldInParameters = this.state.inParameters;
     const oldInAsync = this.state.inAsync;

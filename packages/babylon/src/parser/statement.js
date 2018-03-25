@@ -196,12 +196,17 @@ export default class StatementParser extends ExpressionParser {
           } else {
             this.state = state;
           }
-        } else if (this.hasPlugin("lenient")) {
+        } else if (
+          this.hasPlugin("lenient") &&
+          !this.hasPlugin("lenientCompat")
+        ) {
           const state = this.state.clone();
+          const precedingSemicolon =
+            this.input.slice(this.state.start - 1, this.state.start) === ";";
           this.next();
           if (
-            this.match(tt.eq) ||
-            (this.eat(tt.colon) && !this.matchNoIndent())
+            !precedingSemicolon &&
+            (this.match(tt.eq) || this.eat(tt.colon))
           ) {
             if (!declaration) this.unexpected();
             this.state = state;
@@ -820,7 +825,12 @@ export default class StatementParser extends ExpressionParser {
     for (;;) {
       const decl = this.startNode();
       this.parseVarHead(decl);
-      if (this.eat(tt.eq)) {
+      if (
+        this.eat(tt.eq) ||
+        (this.hasPlugin("lenient") &&
+          !this.hasPlugin("lenientCompat") &&
+          this.eat(tt.reassign))
+      ) {
         decl.init = this.parseMaybeAssign(isFor);
       } else {
         if (
