@@ -122,6 +122,10 @@ gulp.task("build", function() {
   return merge([buildBabel(/* exclude */ bundles), buildRollup(bundles)]);
 });
 
+gulp.task("build-babylon", function() {
+  return buildRollup(["packages/babylon"]);
+});
+
 gulp.task("build-no-bundle", () => buildBabel());
 
 gulp.task("watch", ["build-no-bundle"], function() {
