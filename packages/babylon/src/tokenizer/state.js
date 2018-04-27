@@ -179,6 +179,8 @@ export default class State {
   lastTokStart: number;
   lastTokEnd: number;
 
+  lastTokType: TokenType;
+
   // The context stack is used to superficially track syntactic
   // context to predict whether a regular expression is allowed in a
   // given position.

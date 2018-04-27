@@ -1690,10 +1690,10 @@ export default class ExpressionParser extends LValParser {
       (!this.hasPlugin("lenient")
         ? !this.match(tt.braceL)
         : this.hasPlugin("lenientCompat")
-          ? !this.match(tt.braceL) && !this.matchIndent()
+          ? !this.match(tt.braceL) && !this.matchIndent(node)
           : this.match(tt.braceL)
             ? this.state.input[this.state.pos] !== ";"
-            : !this.matchIndent());
+            : !this.matchIndent(node));
 
     const oldInParameters = this.state.inParameters;
     const oldInAsync = this.state.inAsync;

@@ -174,12 +174,12 @@ export default class Tokenizer extends LocationParser {
   }
 
   // Whether the current token is at the begining of a line
-  // that's more indented than the previous line
-  matchIndent(): boolean {
+  // that's more indented than the given node
+  matchIndent(node: NodeType): boolean {
     return (
       this.hasPlugin("lenient") &&
       this.isRightAfterIndent() &&
-      (this.state.indent || 0) > this.state.lastIndent
+      (this.state.indent || 0) > node.extra.indent
     );
   }
 

@@ -118,10 +118,10 @@ export default class UtilParser extends Tokenizer {
     }
   }
 
-  expectBraceOrIndent(): void {
+  expectBraceOrIndent(node: Node): void {
     if (this.match(tt.braceL)) {
       this.eat(tt.braceL);
-    } else if (!this.matchIndent()) {
+    } else if (!this.matchIndent(node)) {
       this.unexpected(null, tt.braceL);
     }
   }

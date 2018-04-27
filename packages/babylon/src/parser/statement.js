@@ -66,7 +66,7 @@ export default class StatementParser extends ExpressionParser {
 
   parseStatement(
     declaration: boolean,
-    canBeImplicitBlock: boolean,
+    canBeImplicitBlock: ?N.Node,
     topLevel?: boolean,
   ): N.Statement {
     if (this.match(tt.at)) {
@@ -81,13 +81,13 @@ export default class StatementParser extends ExpressionParser {
 
   parseStatementContent(
     declaration: boolean,
-    canBeImplicitBlock: boolean,
+    canBeImplicitBlock: ?N.Node,
     topLevel: ?boolean,
   ): N.Statement {
     const starttype = this.state.type;
     const node = this.startNode();
 
-    if (canBeImplicitBlock && this.matchIndent()) {
+    if (canBeImplicitBlock != null && this.matchIndent(canBeImplicitBlock)) {
       return this.parseBlock();
     }
 
@@ -374,7 +374,7 @@ export default class StatementParser extends ExpressionParser {
   parseDoStatement(node: N.DoWhileStatement): N.DoWhileStatement {
     this.next();
     this.state.labels.push(loopLabel);
-    node.body = this.parseStatement(false, true);
+    node.body = this.parseStatement(false, node);
     this.state.labels.pop();
     this.expect(tt._while);
     node.test = this.parseParenExpression();
@@ -473,9 +473,9 @@ export default class StatementParser extends ExpressionParser {
   parseIfStatement(node: N.IfStatement): N.IfStatement {
     this.next();
     node.test = this.parseParenExpression();
-    node.consequent = this.parseStatement(false, true);
+    node.consequent = this.parseStatement(false, node);
     node.alternate = this.eat(tt._else)
-      ? this.parseStatement(false, true)
+      ? this.parseStatement(false, node)
       : null;
     return this.finishNode(node, "IfStatement");
   }
@@ -491,7 +491,7 @@ export default class StatementParser extends ExpressionParser {
     // optional arguments, we eagerly look for a semicolon or the
     // possibility to insert one.
 
-    if (this.isLineTerminator() && !this.matchIndent()) {
+    if (this.isLineTerminator() && !this.matchIndent(node)) {
       node.argument = null;
     } else {
       node.argument = this.parseExpression();
@@ -505,7 +505,7 @@ export default class StatementParser extends ExpressionParser {
     this.next();
     node.discriminant = this.parseParenExpression();
     const cases = (node.cases = []);
-    this.expectBraceOrIndent();
+    this.expectBraceOrIndent(node);
     this.state.labels.push(switchLabel);
 
     // Statements under must be grouped (by label) in SwitchCase
@@ -532,7 +532,7 @@ export default class StatementParser extends ExpressionParser {
         this.expectLenient(tt.colon);
       } else {
         if (cur) {
-          cur.consequent.push(this.parseStatement(true, true));
+          cur.consequent.push(this.parseStatement(true, cur));
         } else {
           this.unexpected();
         }
@@ -609,7 +609,7 @@ export default class StatementParser extends ExpressionParser {
     this.next();
     node.test = this.parseParenExpression();
     this.state.labels.push(loopLabel);
-    node.body = this.parseStatement(false, true);
+    node.body = this.parseStatement(false, node);
     this.state.labels.pop();
     return this.finishNode(node, "WhileStatement");
   }
@@ -620,7 +620,7 @@ export default class StatementParser extends ExpressionParser {
     }
     this.next();
     node.object = this.parseParenExpression();
-    node.body = this.parseStatement(false, true);
+    node.body = this.parseStatement(false, node);
     return this.finishNode(node, "WithStatement");
   }
 
@@ -658,7 +658,7 @@ export default class StatementParser extends ExpressionParser {
       kind: kind,
       statementStart: this.state.start,
     });
-    node.body = this.parseStatement(true, true);
+    node.body = this.parseStatement(true, node);
 
     if (
       node.body.type == "ClassDeclaration" ||
@@ -738,7 +738,7 @@ export default class StatementParser extends ExpressionParser {
         octalPosition = this.state.octalPosition;
       }
 
-      const stmt = this.parseStatement(true, false, topLevel);
+      const stmt = this.parseStatement(true, null, topLevel);
 
       if (directives && !parsedNonDirective && this.isValidDirective(stmt)) {
         const directive = this.stmtToDirective(stmt);
@@ -782,7 +782,7 @@ export default class StatementParser extends ExpressionParser {
     this.expect(tt.semi);
     node.update = this.match(tt.parenR) ? null : this.parseExpression();
     this.expectLenient(tt.parenR);
-    node.body = this.parseStatement(false, true);
+    node.body = this.parseStatement(false, node);
     this.state.labels.pop();
     return this.finishNode(node, "ForStatement");
   }
@@ -807,7 +807,7 @@ export default class StatementParser extends ExpressionParser {
     node.left = init;
     node.right = this.parseExpression();
     this.expectLenient(tt.parenR);
-    node.body = this.parseStatement(false, true);
+    node.body = this.parseStatement(false, node);
     this.state.labels.pop();
     return this.finishNode(node, type);
   }
@@ -989,7 +989,7 @@ export default class StatementParser extends ExpressionParser {
 
     classBody.body = [];
 
-    this.expectBraceOrIndent();
+    this.expectBraceOrIndent(node);
 
     while (!this.eat(tt.braceR)) {
       if (this.eat(tt.semi)) {
@@ -1483,7 +1483,7 @@ export default class StatementParser extends ExpressionParser {
 
   // eslint-disable-next-line no-unused-vars
   parseExportDeclaration(node: N.ExportNamedDeclaration): ?N.Declaration {
-    return this.parseStatement(true, true);
+    return this.parseStatement(true, node);
   }
 
   isExportDefaultSpecifier(): boolean {
