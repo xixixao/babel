@@ -17,6 +17,9 @@ class Node implements NodeBase {
     this.loc = new SourceLocation(loc);
     if (parser && parser.options.ranges) this.range = [pos, 0];
     if (parser && parser.filename) this.loc.filename = parser.filename;
+    if (parser && parser.hasPlugin("lenient")) {
+      this.extra = { indent: parser.state.indent };
+    }
   }
 
   type: string;
@@ -47,13 +50,7 @@ class Node implements NodeBase {
 export class NodeUtils extends UtilParser {
   startNode<T: NodeType>(): T {
     // $FlowIgnore
-    const newNode = new Node(this, this.state.start, this.state.startLoc);
-    if (this.hasPlugin("lenient")) {
-      newNode.extra = newNode.extra || {};
-      newNode.extra.indent = this.state.indent;
-    }
-    // $FlowIgnore
-    return newNode;
+    return new Node(this, this.state.start, this.state.startLoc);
   }
 
   startNodeAt<T: NodeType>(pos: number, loc: Position): T {
