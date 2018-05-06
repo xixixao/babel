@@ -568,7 +568,7 @@ export default class StatementParser extends ExpressionParser {
     if (this.match(tt._catch)) {
       const clause = this.startNode();
       this.next();
-      if (this.match(tt.parenL)) {
+      if (!this.match(tt.braceL) && !this.matchIndent(node)) {
         this.expectLenient(tt.parenL);
         clause.param = this.parseBindingAtom();
         const clashes: any = Object.create(null);
