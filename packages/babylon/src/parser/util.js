@@ -113,8 +113,18 @@ export default class UtilParser extends Tokenizer {
       this.insertFakeToken(type);
       return true;
     } else {
-      this.eat(type) || this.unexpected(pos, type);
+      this.expect(type, pos);
       return false;
+    }
+  }
+
+  // Like expectLenient, but always inserts fake even if real token is present
+
+  expectOrInsertFake(type: TokenType, pos?: ?number): void {
+    if (this.hasPlugin("lenient")) {
+      this.insertFakeToken(type);
+    } else {
+      this.expect(type, pos);
     }
   }
 

@@ -1004,9 +1004,9 @@ export default class ExpressionParser extends LValParser {
   }
 
   parseParenExpression(): N.Expression {
-    this.expectLenient(tt.parenL);
+    this.expectOrInsertFake(tt.parenL);
     const val = this.parseExpression();
-    this.expectLenient(tt.parenR);
+    this.expectOrInsertFake(tt.parenR);
     return val;
   }
 
