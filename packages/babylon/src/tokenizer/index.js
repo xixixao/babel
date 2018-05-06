@@ -193,7 +193,7 @@ export default class Tokenizer extends LocationParser {
 
   // Whether the current token is at the begining of a line
   // that's less indented than the given node
-  matchDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
+  matchDedent(node: NodeType): boolean {
     if (
       this.hasPlugin("lenient") &&
       ((this.isRightAfterIndent() &&
@@ -202,7 +202,18 @@ export default class Tokenizer extends LocationParser {
         this.match(tt.bracketR) ||
         this.match(tt.eof))
     ) {
+      return true;
+    }
+    return false;
+  }
+
+  // Matches dedent and makes sure there is or we add a fake end
+  eatDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
+    if (this.matchDedent(node)) {
       // We want to support trailing `}` even in lenient mode
+      if (!this.match(end)) {
+        this.insertFakeToken(end);
+      }
       this.eat(end);
       return true;
     }

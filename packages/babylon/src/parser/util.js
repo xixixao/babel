@@ -108,23 +108,23 @@ export default class UtilParser extends Tokenizer {
 
   // Returns whether the token was faked for lenient mode
 
-  expectLenient(type: TokenType, pos?: ?number): boolean {
+  expectLenient(type: TokenType): boolean {
     if (this.hasPlugin("lenient") && !this.match(type)) {
       this.insertFakeToken(type);
       return true;
     } else {
-      this.expect(type, pos);
+      this.expect(type);
       return false;
     }
   }
 
   // Like expectLenient, but always inserts fake even if real token is present
 
-  expectOrInsertFake(type: TokenType, pos?: ?number): void {
+  expectOrInsertFake(type: TokenType): void {
     if (this.hasPlugin("lenient")) {
       this.insertFakeToken(type);
     } else {
-      this.expect(type, pos);
+      this.expect(type);
     }
   }
 

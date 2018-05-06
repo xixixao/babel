@@ -537,7 +537,7 @@ export default class StatementParser extends ExpressionParser {
           this.unexpected();
         }
       }
-      if (cur && this.matchDedent(cur)) {
+      if (cur && this.eatDedent(cur)) {
         break;
       }
     }
@@ -758,7 +758,7 @@ export default class StatementParser extends ExpressionParser {
 
       parsedNonDirective = true;
       body.push(stmt);
-      if (end === tt.dedent && this.matchDedent(stmt, end)) {
+      if (end === tt.dedent && this.eatDedent(stmt, end)) {
         break;
       }
     }
@@ -1029,7 +1029,7 @@ export default class StatementParser extends ExpressionParser {
           "Stage 2 decorators may only be used with a class or a class method",
         );
       }
-      if (this.matchDedent(member)) {
+      if (this.eatDedent(member)) {
         break;
       }
     }
