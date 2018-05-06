@@ -88,7 +88,7 @@ export default class StatementParser extends ExpressionParser {
     const node = this.startNode();
 
     if (canBeImplicitBlock != null && this.matchIndent(canBeImplicitBlock)) {
-      return this.parseBlock();
+      return this.parseBlock(false, canBeImplicitBlock);
     }
 
     // Most types of statements are recognized by the keyword they
@@ -537,7 +537,7 @@ export default class StatementParser extends ExpressionParser {
           this.unexpected();
         }
       }
-      if (cur && this.eatDedent(cur)) {
+      if (cur && this.eatDedent(node, tt.braceR)) {
         break;
       }
     }
@@ -691,9 +691,18 @@ export default class StatementParser extends ExpressionParser {
   // strict"` declarations when `allowStrict` is true (used for
   // function bodies).
 
-  parseBlock(allowDirectives?: boolean): N.BlockStatement {
-    const node = this.startNode();
+  parseBlock(
+    allowDirectives?: boolean,
+    canBeImplicitBlock?: N.Node,
+  ): N.BlockStatement {
     const end = this.expectLenient(tt.braceL) ? tt.dedent : tt.braceR;
+    const node = this.startNodeAt(
+      this.state.lastTokEnd,
+      this.state.lastTokEndLoc,
+      this.hasPlugin("lenient") && canBeImplicitBlock != null
+        ? canBeImplicitBlock.extra.indent
+        : null,
+    );
     this.parseBlockBody(node, allowDirectives, false, end);
     return this.finishNode(node, "BlockStatement");
   }
@@ -715,6 +724,7 @@ export default class StatementParser extends ExpressionParser {
     const body = (node.body = []);
     const directives = (node.directives = []);
     this.parseBlockOrModuleBlockBody(
+      node,
       body,
       allowDirectives ? directives : undefined,
       topLevel,
@@ -724,6 +734,7 @@ export default class StatementParser extends ExpressionParser {
 
   // Undefined directives means that directives are not allowed.
   parseBlockOrModuleBlockBody(
+    node: N.BlockStatementLike,
     body: N.Statement[],
     directives: ?(N.Directive[]),
     topLevel: boolean,
@@ -758,7 +769,7 @@ export default class StatementParser extends ExpressionParser {
 
       parsedNonDirective = true;
       body.push(stmt);
-      if (end === tt.dedent && this.eatDedent(stmt, end)) {
+      if (end === tt.dedent && this.eatDedent(node, tt.braceR)) {
         break;
       }
     }
@@ -1029,7 +1040,7 @@ export default class StatementParser extends ExpressionParser {
           "Stage 2 decorators may only be used with a class or a class method",
         );
       }
-      if (this.eatDedent(member)) {
+      if (this.eatDedent(node, tt.braceR)) {
         break;
       }
     }

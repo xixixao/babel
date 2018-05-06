@@ -10,7 +10,7 @@ import type { Comment, Node as NodeType, NodeBase } from "../types";
 const commentKeys = ["leadingComments", "trailingComments", "innerComments"];
 
 class Node implements NodeBase {
-  constructor(parser: Parser, pos: number, loc: Position) {
+  constructor(parser: Parser, pos: number, loc: Position, indent: ?number) {
     this.type = "";
     this.start = pos;
     this.end = 0;
@@ -18,7 +18,7 @@ class Node implements NodeBase {
     if (parser && parser.options.ranges) this.range = [pos, 0];
     if (parser && parser.filename) this.loc.filename = parser.filename;
     if (parser && parser.hasPlugin("lenient")) {
-      this.extra = { indent: parser.state.indent };
+      this.extra = { indent };
     }
   }
 
@@ -49,18 +49,21 @@ class Node implements NodeBase {
 
 export class NodeUtils extends UtilParser {
   startNode<T: NodeType>(): T {
+    const indent = this.hasPlugin("lenient") ? this.state.indent : undefined;
     // $FlowIgnore
-    return new Node(this, this.state.start, this.state.startLoc);
+    return new Node(this, this.state.start, this.state.startLoc, indent);
   }
 
-  startNodeAt<T: NodeType>(pos: number, loc: Position): T {
+  startNodeAt<T: NodeType>(pos: number, loc: Position, indent?: ?number): T {
+    const ind =
+      this.hasPlugin("lenient") && indent != null ? indent : this.state.indent;
     // $FlowIgnore
-    return new Node(this, pos, loc);
+    return new Node(this, pos, loc, ind);
   }
 
   /** Start a new node with a previous node's location. */
   startNodeAtNode<T: NodeType>(type: NodeType): T {
-    return this.startNodeAt(type.start, type.loc.start);
+    return this.startNodeAt(type.start, type.loc.start, type.extra.indent);
   }
 
   // Finish an AST node, adding `type` and `end` properties.

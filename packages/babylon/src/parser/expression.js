@@ -26,7 +26,10 @@ import type { Pos, Position } from "../util/location";
 
 export default class ExpressionParser extends LValParser {
   // Forward-declaration: defined in statement.js
-  +parseBlock: (allowDirectives?: boolean) => N.BlockStatement;
+  +parseBlock: (
+    allowDirectives?: boolean,
+    canBeImplicitBlock?: N.Node,
+  ) => N.BlockStatement;
   +parseClass: (
     node: N.Class,
     isStatement: boolean,
@@ -1711,7 +1714,7 @@ export default class ExpressionParser extends LValParser {
       this.state.inGenerator = node.generator;
       this.state.inFunction = true;
       this.state.labels = [];
-      node.body = this.parseBlock(true);
+      node.body = this.parseBlock(true, node);
       this.state.inFunction = oldInFunc;
       this.state.inGenerator = oldInGen;
       this.state.labels = oldLabels;

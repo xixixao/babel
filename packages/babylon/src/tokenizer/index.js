@@ -192,12 +192,13 @@ export default class Tokenizer extends LocationParser {
   }
 
   // Whether the current token is at the begining of a line
-  // that's less indented than the given node
-  matchDedent(node: NodeType): boolean {
+  // that's equally indented to the given node - this is used for detecting
+  // dedents, so previously processed tokens should be indented more
+  matchDedent(node: NodeType): boolean | "eq" {
     if (
       this.hasPlugin("lenient") &&
       ((this.isRightAfterIndent() &&
-        (this.state.indent || 0) < node.extra.indent) ||
+        (this.state.indent || 0) <= node.extra.indent) ||
         this.match(tt.parenR) ||
         this.match(tt.bracketR) ||
         this.match(tt.eof))
@@ -208,13 +209,15 @@ export default class Tokenizer extends LocationParser {
   }
 
   // Matches dedent and makes sure there is or we add a fake end
-  eatDedent(node: NodeType, end?: TokenType = tt.braceR): boolean {
+  eatDedent(node: NodeType, end: TokenType): boolean {
     if (this.matchDedent(node)) {
-      // We want to support trailing `}` even in lenient mode
       if (!this.match(end)) {
         this.insertFakeToken(end);
       }
-      this.eat(end);
+      if ((this.state.indent || 0) === node.extra.indent) {
+        // We want to support trailing `}` even in lenient mode
+        this.eat(end);
+      }
       return true;
     }
     return false;
@@ -458,6 +461,7 @@ export default class Tokenizer extends LocationParser {
     this.updateContext(prevType);
   }
 
+  // We positioned the fake token right after the previous token, with 0 length
   insertFakeToken(type: TokenType): void {
     // const prevType = this.state.type;
     // this.state.type = type;
@@ -467,11 +471,16 @@ export default class Tokenizer extends LocationParser {
     const state = {
       type,
       value: undefined,
-      start: this.state.start,
-      end: this.state.end,
-      loc: new SourceLocation(this.state.startLoc, this.state.endLoc),
+      start: this.state.lastTokEnd,
+      end: this.state.lastTokEnd,
+      loc: new SourceLocation(
+        this.state.lastTokEndLoc,
+        this.state.lastTokEndLoc,
+      ),
     };
-    this.state.tokens.push(new Token(state));
+    if (this.options.tokens) {
+      this.state.tokens.push(new Token(state));
+    }
   }
 
   // ### Token reading

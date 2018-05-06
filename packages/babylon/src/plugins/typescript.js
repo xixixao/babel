@@ -1505,6 +1505,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
     parseStatementContent(
       declaration: boolean,
+      canBeImplicitBlock: ?N.Node,
       topLevel: ?boolean,
     ): N.Statement {
       if (this.state.type === tt._const) {
@@ -1516,7 +1517,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
           return this.tsParseEnumDeclaration(node, /* isConst */ true);
         }
       }
-      return super.parseStatementContent(declaration, topLevel);
+      return super.parseStatementContent(
+        declaration,
+        canBeImplicitBlock,
+        topLevel,
+      );
     }
 
     parseAccessModifier(): ?N.Accessibility {

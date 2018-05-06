@@ -1273,7 +1273,11 @@ export default (superClass: Class<Parser>): Class<Parser> =>
     }
 
     // interfaces
-    parseStatement(declaration: boolean, topLevel?: boolean): N.Statement {
+    parseStatement(
+      declaration: boolean,
+      canBeImplicitBlock: ?N.Node,
+      topLevel?: boolean,
+    ): N.Statement {
       // strict mode handling of `interface` since it's a reserved word
       if (
         this.state.strict &&
@@ -1284,7 +1288,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         this.next();
         return this.flowParseInterface(node);
       } else {
-        return super.parseStatement(declaration, topLevel);
+        return super.parseStatement(declaration, canBeImplicitBlock, topLevel);
       }
     }
 
