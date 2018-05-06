@@ -529,7 +529,7 @@ export default class ExpressionParser extends LValParser {
       node.object = base;
       node.property = this.parseExpression();
       node.computed = true;
-      this.expectLenient(tt.bracketR);
+      this.expect(tt.bracketR);
       if (state.optionalChainMember) {
         node.optional = false;
         return this.finishNode(node, "OptionalMemberExpression");
