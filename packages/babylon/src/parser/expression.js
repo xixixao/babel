@@ -246,7 +246,7 @@ export default class ExpressionParser extends LValParser {
       const node = this.startNodeAt(startPos, startLoc);
       node.test = expr;
       node.consequent = this.parseMaybeAssign();
-      this.expectLenient(tt.colon);
+      this.expect(tt.colon);
       node.alternate = this.parseMaybeAssign(noIn);
       return this.finishNode(node, "ConditionalExpression");
     }
