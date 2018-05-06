@@ -319,6 +319,7 @@ export default class Tokenizer extends LocationParser {
     end: number,
     startLoc: Position,
     endLoc: Position,
+    indent: ?number,
   ): void {
     const comment = {
       type: block ? "CommentBlock" : "CommentLine",
@@ -327,6 +328,10 @@ export default class Tokenizer extends LocationParser {
       end: end,
       loc: new SourceLocation(startLoc, endLoc),
     };
+
+    if (indent != null) {
+      comment.indent = indent;
+    }
 
     if (!this.isLookahead) {
       if (this.options.tokens) this.state.tokens.push(comment);
@@ -359,6 +364,7 @@ export default class Tokenizer extends LocationParser {
       this.state.pos,
       startLoc,
       this.state.curPosition(),
+      this.commentIndent(start),
     );
   }
 
@@ -385,7 +391,16 @@ export default class Tokenizer extends LocationParser {
       this.state.pos,
       startLoc,
       this.state.curPosition(),
+      this.commentIndent(start),
     );
+  }
+
+  commentIndent(commentStart: number): ?number {
+    return !this.hasPlugin("lenient")
+      ? null
+      : this.state.start > this.state.lineStart
+        ? this.state.indent
+        : commentStart - this.state.lineStart;
   }
 
   // Called at the start of the parse and after every token. Skips
@@ -465,16 +480,27 @@ export default class Tokenizer extends LocationParser {
   insertFakeToken(type: TokenType): void {
     const closing = type === tt.parenR || type === tt.braceR;
     const commentMustBeOnSameLine = type === tt.parenR;
+    const commentMustBeIndented = type === tt.braceR;
     let start = this.state.lastTokEnd;
     let end = this.state.lastTokEnd;
     let loc = this.state.lastTokEndLoc;
     if (closing && this.state.leadingComments.length > 0) {
       const comments = this.state.leadingComments;
-      const lastComment = comments[comments.length - 1];
-      if (!commentMustBeOnSameLine || lastComment.loc.start.line === loc.line) {
-        start = lastComment.end;
-        end = lastComment.end;
-        loc = lastComment.loc.end;
+      for (let i = comments.length - 1; i >= 0; i--) {
+        const lastComment = comments[i];
+        if (
+          (commentMustBeOnSameLine &&
+            lastComment.loc.start.line === loc.line) ||
+          (commentMustBeIndented &&
+            lastComment.indent != null &&
+            this.state.indent != null &&
+            lastComment.indent > this.state.indent)
+        ) {
+          start = lastComment.end;
+          end = lastComment.end;
+          loc = lastComment.loc.end;
+          break;
+        }
       }
     }
     const state = {
@@ -485,7 +511,7 @@ export default class Tokenizer extends LocationParser {
       loc: new SourceLocation(loc, loc),
     };
     if (this.options.tokens) {
-      this.state.tokens.push(new Token(state));
+      this.state.tokens.push(new Token((state: any)));
     }
     this.state.lastTokEnd = state.end;
     this.state.lastTokStart = state.start;

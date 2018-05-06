@@ -19,6 +19,7 @@ export type Comment = {
   start: number,
   end: number,
   loc: SourceLocation,
+  indent?: ?number,
 };
 
 export interface NodeBase {
