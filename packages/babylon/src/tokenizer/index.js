@@ -463,24 +463,34 @@ export default class Tokenizer extends LocationParser {
 
   // We positioned the fake token right after the previous token, with 0 length
   insertFakeToken(type: TokenType): void {
-    // const prevType = this.state.type;
-    // this.state.type = type;
-    // this.state.value = undefined;
-
-    // this.updateContext(prevType);
+    const closing = type === tt.parenR || type === tt.braceR;
+    const commentMustBeOnSameLine = type === tt.parenR;
+    let start = this.state.lastTokEnd;
+    let end = this.state.lastTokEnd;
+    let loc = this.state.lastTokEndLoc;
+    if (closing && this.state.leadingComments.length > 0) {
+      const comments = this.state.leadingComments;
+      const lastComment = comments[comments.length - 1];
+      if (!commentMustBeOnSameLine || lastComment.loc.start.line === loc.line) {
+        start = lastComment.end;
+        end = lastComment.end;
+        loc = lastComment.loc.end;
+      }
+    }
     const state = {
       type,
       value: undefined,
-      start: this.state.lastTokEnd,
-      end: this.state.lastTokEnd,
-      loc: new SourceLocation(
-        this.state.lastTokEndLoc,
-        this.state.lastTokEndLoc,
-      ),
+      start,
+      end,
+      loc: new SourceLocation(loc, loc),
     };
     if (this.options.tokens) {
       this.state.tokens.push(new Token(state));
     }
+    this.state.lastTokEnd = state.end;
+    this.state.lastTokStart = state.start;
+    this.state.lastTokEndLoc = state.loc.end;
+    this.state.lastTokStartLoc = state.loc.start;
   }
 
   // ### Token reading
