@@ -66,7 +66,7 @@ export default class StatementParser extends ExpressionParser {
 
   parseStatement(
     declaration: boolean,
-    canBeImplicitBlock: ?N.Node,
+    parentStatementNode: ?N.Node,
     topLevel?: boolean,
   ): N.Statement {
     if (this.match(tt.at)) {
@@ -74,21 +74,21 @@ export default class StatementParser extends ExpressionParser {
     }
     return this.parseStatementContent(
       declaration,
-      canBeImplicitBlock,
+      parentStatementNode,
       topLevel,
     );
   }
 
   parseStatementContent(
     declaration: boolean,
-    canBeImplicitBlock: ?N.Node,
+    parentStatementNode: ?N.Node,
     topLevel: ?boolean,
   ): N.Statement {
     const starttype = this.state.type;
     const node = this.startNode();
 
-    if (canBeImplicitBlock != null && this.matchIndent(canBeImplicitBlock)) {
-      return this.parseBlock(false, canBeImplicitBlock);
+    if (parentStatementNode != null && this.matchIndent(parentStatementNode)) {
+      return this.parseBlock(parentStatementNode, false);
     }
 
     // Most types of statements are recognized by the keyword they
@@ -138,7 +138,7 @@ export default class StatementParser extends ExpressionParser {
       case tt._with:
         return this.parseWithStatement(node);
       case tt.braceL:
-        return this.parseBlock();
+        return this.parseBlock(null);
       case tt.semi:
         return this.parseEmptyStatement(node);
       case tt._export:
@@ -562,7 +562,7 @@ export default class StatementParser extends ExpressionParser {
   parseTryStatement(node: N.TryStatement): N.TryStatement {
     this.next();
 
-    node.block = this.parseBlock();
+    node.block = this.parseBlock(node);
     node.handler = null;
 
     if (this.match(tt._catch)) {
@@ -578,12 +578,12 @@ export default class StatementParser extends ExpressionParser {
         this.expectPlugin("optionalCatchBinding");
         clause.param = null;
       }
-      clause.body = this.parseBlock();
+      clause.body = this.parseBlock(node);
       node.handler = this.finishNode(clause, "CatchClause");
     }
 
     node.guardedHandlers = empty;
-    node.finalizer = this.eat(tt._finally) ? this.parseBlock() : null;
+    node.finalizer = this.eat(tt._finally) ? this.parseBlock(node) : null;
 
     if (!node.handler && !node.finalizer) {
       this.raise(node.start, "Missing catch or finally clause");
@@ -692,15 +692,15 @@ export default class StatementParser extends ExpressionParser {
   // function bodies).
 
   parseBlock(
+    parentStatementNode: ?N.Node,
     allowDirectives?: boolean,
-    canBeImplicitBlock?: N.Node,
   ): N.BlockStatement {
     const end = this.expectLenient(tt.braceL) ? tt.dedent : tt.braceR;
     const node = this.startNodeAt(
       this.state.lastTokEnd,
       this.state.lastTokEndLoc,
-      this.hasPlugin("lenient") && canBeImplicitBlock != null
-        ? canBeImplicitBlock.extra.indent
+      this.hasPlugin("lenient") && parentStatementNode != null
+        ? parentStatementNode.extra.indent
         : null,
     );
     this.parseBlockBody(node, allowDirectives, false, end);
