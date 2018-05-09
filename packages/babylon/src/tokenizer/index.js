@@ -210,17 +210,21 @@ export default class Tokenizer extends LocationParser {
 
   // Matches dedent and makes sure there is or we add a fake end
   eatDedent(node: NodeType, end: TokenType): boolean {
-    if (this.matchDedent(node)) {
-      if (!this.match(end)) {
-        this.insertFakeToken(end);
+    if (end === tt.dedent && this.matchDedent(node)) {
+      if (!this.match(tt.braceR)) {
+        this.insertFakeToken(tt.braceR);
       }
       if ((this.state.indent || 0) === node.extra.indent) {
         // We want to support trailing `}` even in lenient mode
-        this.eat(end);
+        this.eat(tt.braceR);
       }
       return true;
     }
     return false;
+  }
+
+  eatBlockEnd(end: TokenType): boolean {
+    return end !== tt.dedent && this.eat(end);
   }
 
   isRightAfterIndent(): boolean {

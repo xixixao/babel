@@ -505,7 +505,7 @@ export default class StatementParser extends ExpressionParser {
     this.next();
     node.discriminant = this.parseParenExpression();
     const cases = (node.cases = []);
-    this.expectBraceOrIndent(node);
+    const end = this.expectBraceOrIndent(node);
     this.state.labels.push(switchLabel);
 
     // Statements under must be grouped (by label) in SwitchCase
@@ -513,7 +513,7 @@ export default class StatementParser extends ExpressionParser {
     // adding statements to.
 
     let cur;
-    for (let sawDefault; !this.match(tt.braceR); ) {
+    for (let sawDefault; !this.eatBlockEnd(end); ) {
       if (this.match(tt._case) || this.match(tt._default)) {
         const isCase = this.match(tt._case);
         if (cur) this.finishNode(cur, "SwitchCase");
@@ -532,17 +532,16 @@ export default class StatementParser extends ExpressionParser {
         this.expectLenient(tt.colon);
       } else {
         if (cur) {
-          cur.consequent.push(this.parseStatement(true, cur));
+          cur.consequent.push(this.parseStatement(true, null));
         } else {
           this.unexpected();
         }
       }
-      if (cur && this.eatDedent(node, tt.braceR)) {
+      if (this.eatDedent(node, end)) {
         break;
       }
     }
     if (cur) this.finishNode(cur, "SwitchCase");
-    this.next(); // Closing brace
     this.state.labels.pop();
     return this.finishNode(node, "SwitchStatement");
   }
@@ -744,7 +743,7 @@ export default class StatementParser extends ExpressionParser {
     let oldStrict;
     let octalPosition;
 
-    while (end === tt.dedent || !this.eat(end)) {
+    while (!this.eatBlockEnd(end)) {
       if (!parsedNonDirective && this.state.containsOctal && !octalPosition) {
         octalPosition = this.state.octalPosition;
       }
@@ -769,7 +768,7 @@ export default class StatementParser extends ExpressionParser {
 
       parsedNonDirective = true;
       body.push(stmt);
-      if (end === tt.dedent && this.eatDedent(node, tt.braceR)) {
+      if (this.eatDedent(node, end)) {
         break;
       }
     }
@@ -1002,9 +1001,9 @@ export default class StatementParser extends ExpressionParser {
 
     classBody.body = [];
 
-    this.expectBraceOrIndent(node);
+    const end = this.expectBraceOrIndent(node);
 
-    while (!this.eat(tt.braceR)) {
+    while (!this.eatBlockEnd(end)) {
       if (this.eat(tt.semi)) {
         if (decorators.length > 0) {
           this.raise(
@@ -1042,7 +1041,7 @@ export default class StatementParser extends ExpressionParser {
           "Stage 2 decorators may only be used with a class or a class method",
         );
       }
-      if (this.eatDedent(node, tt.braceR)) {
+      if (this.eatDedent(node, end)) {
         break;
       }
     }

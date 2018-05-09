@@ -128,12 +128,16 @@ export default class UtilParser extends Tokenizer {
     }
   }
 
-  expectBraceOrIndent(node: Node): void {
+  // Returns the type of token required to match the opening brace/indent
+
+  expectBraceOrIndent(node: Node): TokenType {
     if (this.match(tt.braceL)) {
       this.eat(tt.braceL);
+      return tt.braceR;
     } else if (!this.matchIndent(node)) {
       this.unexpected(null, tt.braceL);
     }
+    return tt.dedent;
   }
 
   // Raise an unexpected token error. Can take the expected token type
