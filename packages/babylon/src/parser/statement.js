@@ -1517,11 +1517,10 @@ export default class StatementParser extends ExpressionParser {
   }
 
   isExportDefaultSpecifier(): boolean {
-    if (this.match(tt.name)) {
-      return this.state.value !== "async";
-    }
-
-    if (!this.match(tt._default)) {
+    if (
+      (!this.match(tt.name) || this.state.value === "async") &&
+      !this.match(tt._default)
+    ) {
       return false;
     }
 
@@ -1596,7 +1595,8 @@ export default class StatementParser extends ExpressionParser {
       this.state.type.keyword === "function" ||
       this.state.type.keyword === "class" ||
       this.isContextual("async") ||
-      (this.match(tt.at) && this.expectPlugin("decorators2"))
+      (this.match(tt.at) && this.expectPlugin("decorators2")) ||
+      this.isLenientConstDeclaration(true)
     );
   }
 
