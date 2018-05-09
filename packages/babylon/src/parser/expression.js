@@ -1504,7 +1504,10 @@ export default class ExpressionParser extends LValParser {
           startLoc,
           prop.key.__clone(),
         );
-      } else if (this.match(tt.eq) && refShorthandDefaultPos) {
+      } else if (
+        this.match(this.hasPlugin("lenient") ? tt.reassign : tt.eq) &&
+        refShorthandDefaultPos
+      ) {
         if (!refShorthandDefaultPos.start) {
           refShorthandDefaultPos.start = this.state.start;
         }
