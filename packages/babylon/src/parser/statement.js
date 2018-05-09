@@ -962,7 +962,9 @@ export default class StatementParser extends ExpressionParser {
   ): T {
     this.next();
     this.takeDecorators(node);
-    this.parseClassId(node, isStatement, optionalId);
+    if (!this.matchIndent(node)) {
+      this.parseClassId(node, isStatement, optionalId);
+    }
     this.parseClassSuper(node);
     this.parseClassBody(node);
     return this.finishNode(
