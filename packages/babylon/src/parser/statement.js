@@ -196,24 +196,8 @@ export default class StatementParser extends ExpressionParser {
           } else {
             this.state = state;
           }
-        } else if (
-          this.hasPlugin("lenient") &&
-          !this.hasPlugin("lenientCompat")
-        ) {
-          const state = this.state.clone();
-          const precedingSemicolon =
-            this.input.slice(this.state.start - 1, this.state.start) === ";";
-          this.next();
-          if (
-            !precedingSemicolon &&
-            (this.match(tt.eq) || this.eat(tt.colon))
-          ) {
-            if (!declaration) this.unexpected();
-            this.state = state;
-            return this.parseVarStatement(node, tt._const, false);
-          } else {
-            this.state = state;
-          }
+        } else if (this.isLenientConstDeclaration(declaration)) {
+          return this.parseVarStatement(node, tt._const, false);
         }
     }
 
@@ -234,6 +218,34 @@ export default class StatementParser extends ExpressionParser {
     } else {
       return this.parseExpressionStatement(node, expr);
     }
+  }
+
+  isLenientConstDeclaration(
+    isDeclarationAllowed: boolean,
+    inForLoop?: boolean,
+  ): boolean {
+    if (this.hasPlugin("lenient") && !this.hasPlugin("lenientCompat")) {
+      const state = this.state.clone();
+      // Mark labels with preceding semicolon to distinguish them from
+      // declarations with type annotations
+      const precedingSemicolon =
+        this.input.slice(this.state.start - 1, this.state.start) === ";";
+      this.next();
+      // Checking for `:` for type annotations
+      if (
+        !precedingSemicolon &&
+        (this.match(tt.colon) ||
+          this.match(tt.eq) ||
+          (inForLoop && (this.match(tt._in) || this.isContextual("of"))))
+      ) {
+        if (!isDeclarationAllowed) this.unexpected();
+        this.state = state;
+        return true;
+      } else {
+        this.state = state;
+      }
+    }
+    return false;
   }
 
   assertModuleNodeAllowed(node: N.Node): void {
@@ -409,7 +421,10 @@ export default class StatementParser extends ExpressionParser {
       return this.parseFor(node, null);
     }
 
-    const lenientInit = this.hasPlugin("lenient") && this.match(tt.name);
+    const lenientInit =
+      this.hasPlugin("lenient") &&
+      this.match(tt.name) &&
+      this.isLenientConstDeclaration(true, true);
 
     if (
       this.match(tt._var) ||
@@ -425,7 +440,10 @@ export default class StatementParser extends ExpressionParser {
       this.parseVar(init, true, varKind);
       this.finishNode(init, "VariableDeclaration");
 
-      if (this.match(tt._in) || this.isContextual("of")) {
+      if (
+        (this.match(tt._in) || this.isContextual("of")) &&
+        !(lenientInit && this.match(tt.eq))
+      ) {
         if (init.declarations.length === 1) {
           const declaration = init.declarations[0];
           const isForInInitializer =
