@@ -293,6 +293,15 @@ export default class ExpressionParser extends LValParser {
     noIn: ?boolean,
   ): N.Expression {
     const prec = this.state.type.binop;
+    if (
+      this.hasPlugin("lenient") &&
+      this.hasPlugin("flow") &&
+      this.state.value === "<" &&
+      this.isRightAfterIndent()
+    ) {
+      // ASI protection for leading Flow type parameters
+      return left;
+    }
     if (prec != null && (!noIn || !this.match(tt._in))) {
       if (prec > minPrec) {
         const node = this.startNodeAt(leftStartPos, leftStartLoc);
