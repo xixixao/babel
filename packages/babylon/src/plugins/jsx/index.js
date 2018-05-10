@@ -531,7 +531,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
       }
 
-      if (code === charCodes.lessThan && this.state.exprAllowed) {
+      if (
+        code === charCodes.lessThan &&
+        (this.state.exprAllowed || this.matchIndent(null))
+      ) {
         ++this.state.pos;
         return this.finishToken(tt.jsxTagStart);
       }
