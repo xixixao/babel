@@ -227,8 +227,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
 
       const bodyNode = (node.body = this.startNode());
       const body = (bodyNode.body = []);
-      this.expect(tt.braceL);
-      while (!this.match(tt.braceR)) {
+      const end = this.expectBraceOrIndent(node);
+      while (!this.eatBlockEnd(end)) {
         let bodyNode = this.startNode();
 
         if (this.match(tt._import)) {
@@ -251,8 +251,10 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         }
 
         body.push(bodyNode);
+        if (this.eatDedent(node, end)) {
+          break;
+        }
       }
-      this.expect(tt.braceR);
 
       this.finishNode(bodyNode, "BlockStatement");
 
