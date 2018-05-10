@@ -1015,11 +1015,13 @@ export default class StatementParser extends ExpressionParser {
 
     const state = { hadConstructor: false };
     let decorators: N.Decorator[] = [];
-    const classBody: N.ClassBody = this.startNode();
-
-    classBody.body = [];
 
     const end = this.expectBraceOrIndent(node);
+    const classBody: N.ClassBody = this.startNodeAt(
+      this.state.lastTokEnd,
+      this.state.lastTokEndLoc,
+    );
+    classBody.body = [];
 
     while (!this.eatBlockEnd(end)) {
       if (this.eat(tt.semi)) {

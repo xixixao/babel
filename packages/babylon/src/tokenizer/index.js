@@ -483,13 +483,14 @@ export default class Tokenizer extends LocationParser {
 
   // We positioned the fake token right after the previous token, with 0 length
   insertFakeToken(type: TokenType): void {
-    const closing = type === tt.parenR || type === tt.braceR;
-    const commentMustBeOnSameLine = type === tt.parenR;
+    const respectComments =
+      type === tt.parenR || type === tt.braceL || type === tt.braceR;
+    const commentMustBeOnSameLine = type === tt.parenR || type === tt.braceL;
     const commentMustBeIndented = type === tt.braceR;
     let start = this.state.lastTokEnd;
     let end = this.state.lastTokEnd;
     let loc = this.state.lastTokEndLoc;
-    if (closing && this.state.leadingComments.length > 0) {
+    if (respectComments && this.state.leadingComments.length > 0) {
       const comments = this.state.leadingComments;
       for (let i = comments.length - 1; i >= 0; i--) {
         const lastComment = comments[i];

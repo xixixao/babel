@@ -137,6 +137,7 @@ export default class UtilParser extends Tokenizer {
     } else if (!this.matchIndent(node)) {
       this.unexpected(null, tt.braceL);
     }
+    this.insertFakeToken(tt.braceL);
     return tt.dedent;
   }
 
