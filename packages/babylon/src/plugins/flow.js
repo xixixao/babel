@@ -534,7 +534,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       do {
         node.params.push(this.flowParseTypeParameter());
         if (!this.isRelational(">")) {
-          this.expect(tt.comma);
+          this.expect(tt.comma); // cannot be lenient, throw is used
         }
       } while (!this.isRelational(">"));
       this.expectRelational(">");
@@ -555,7 +555,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       while (!this.isRelational(">")) {
         node.params.push(this.flowParseType());
         if (!this.isRelational(">")) {
-          this.expect(tt.comma);
+          this.expect(tt.comma); // cannot be lenient, throw is used
         }
       }
       this.expectRelational(">");
@@ -872,7 +872,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       while (this.state.pos < this.input.length && !this.match(tt.bracketR)) {
         node.types.push(this.flowParseType());
         if (this.match(tt.bracketR)) break;
-        this.expect(tt.comma);
+        this.expectLenient(tt.comma);
       }
       this.expect(tt.bracketR);
       return this.finishNode(node, "TupleTypeAnnotation");
@@ -916,7 +916,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       while (!this.match(tt.parenR) && !this.match(tt.ellipsis)) {
         params.push(this.flowParseFunctionTypeParam());
         if (!this.match(tt.parenR)) {
-          this.expect(tt.comma);
+          this.expectLenient(tt.comma);
         }
       }
       if (this.eat(tt.ellipsis)) {
