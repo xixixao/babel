@@ -608,7 +608,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       while (!this.match(tt.parenR) && !this.match(tt.ellipsis)) {
         node.params.push(this.flowParseFunctionTypeParam());
         if (!this.match(tt.parenR)) {
-          this.expect(tt.comma);
+          this.expectLenient(tt.comma);
         }
       }
 
@@ -814,7 +814,8 @@ export default (superClass: Class<Parser>): Class<Parser> =>
         !this.eat(tt.semi) &&
         !this.eat(tt.comma) &&
         !this.match(tt.braceR) &&
-        !this.match(tt.braceBarR)
+        !this.match(tt.braceBarR) &&
+        !this.hasPlugin("lenient")
       ) {
         this.unexpected();
       }
