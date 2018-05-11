@@ -1049,7 +1049,7 @@ export default class ExpressionParser extends LValParser {
       if (first) {
         first = false;
       } else {
-        this.expect(tt.comma, refNeedsArrowPos.start || null);
+        this.expectLenient(tt.comma, refNeedsArrowPos.start || null);
         if (this.match(tt.parenR)) {
           optionalCommaStart = this.state.start;
           break;
