@@ -1018,9 +1018,19 @@ export default class ExpressionParser extends LValParser {
   }
 
   parseParenExpression(): N.Expression {
-    this.expectOrInsertFake(tt.parenL);
+    const startPos = this.state.start;
+    const startLoc = this.state.startLoc;
+    this.expectLenient(tt.parenL);
     const val = this.parseExpression();
-    this.expectOrInsertFake(tt.parenR);
+    this.expectLenient(tt.parenR);
+    if (this.hasPlugin("lenient")) {
+      if (this.match(tt.question)) {
+        return this.parseConditional(val, null, startPos, startLoc);
+      }
+      if (this.state.type.binop != null) {
+        return this.parseExprOp(val, startPos, startLoc, -1, null);
+      }
+    }
     return val;
   }
 

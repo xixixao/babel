@@ -118,16 +118,6 @@ export default class UtilParser extends Tokenizer {
     }
   }
 
-  // Like expectLenient, but always inserts fake even if real token is present
-
-  expectOrInsertFake(type: TokenType): void {
-    if (this.hasPlugin("lenient")) {
-      this.insertFakeToken(type);
-    } else {
-      this.expect(type);
-    }
-  }
-
   // Returns the type of token required to match the opening brace/indent
 
   expectBraceOrIndent(node: Node): TokenType {
