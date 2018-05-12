@@ -465,6 +465,14 @@ export default class StatementParser extends ExpressionParser {
       return this.parseFor(node, init);
     }
 
+    if (
+      this.hasPlugin("lenient") &&
+      !this.hasPlugin("lenientCompact") &&
+      this.state.value === "set"
+    ) {
+      this.next();
+    }
+
     const refShorthandDefaultPos = { start: 0 };
     const init = this.parseExpression(true, refShorthandDefaultPos);
     if (this.match(tt._in) || this.isContextual("of")) {
