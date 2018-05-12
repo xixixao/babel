@@ -202,6 +202,7 @@ export default class Tokenizer extends LocationParser {
         (this.state.indent || 0) <= node.extra.indent) ||
         this.match(tt.parenR) ||
         this.match(tt.bracketR) ||
+        this.match(tt.braceR) ||
         this.match(tt.eof))
     ) {
       return true;
@@ -213,6 +214,16 @@ export default class Tokenizer extends LocationParser {
   eatDedent(node: NodeType, end: TokenType): boolean {
     if (end === tt.dedent && this.matchDedent(node)) {
       this.insertFakeToken(tt.braceR);
+      const context = this.curContext();
+      if (
+        // Functions rely on braceR to remove them from context
+        context === ct.functionExpression ||
+        // If interpolation ends right after dedent block, it will pop
+        // the function context instead of its opening brace context
+        (this.state.type === tt.braceR && context === ct.templateQuasi)
+      ) {
+        this.state.context.pop();
+      }
       return true;
     }
     return false;
