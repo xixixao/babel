@@ -212,13 +212,7 @@ export default class Tokenizer extends LocationParser {
   // Matches dedent and makes sure there is or we add a fake end
   eatDedent(node: NodeType, end: TokenType): boolean {
     if (end === tt.dedent && this.matchDedent(node)) {
-      if (!this.match(tt.braceR)) {
-        this.insertFakeToken(tt.braceR);
-      }
-      if ((this.state.indent || 0) === node.extra.indent) {
-        // We want to support trailing `}` even in lenient mode
-        this.eat(tt.braceR);
-      }
+      this.insertFakeToken(tt.braceR);
       return true;
     }
     return false;
@@ -433,8 +427,7 @@ export default class Tokenizer extends LocationParser {
           ++this.state.pos;
           ++this.state.curLine;
           this.state.lineStart = this.state.pos;
-          this.state.insideIndent = true;
-          this.state.lastIndent = this.state.indent || 0;
+          this.markIndent();
           break;
 
         case charCodes.slash:
@@ -464,6 +457,11 @@ export default class Tokenizer extends LocationParser {
           }
       }
     }
+  }
+
+  markIndent(): void {
+    this.state.insideIndent = true;
+    this.state.lastIndent = this.state.indent || 0;
   }
 
   // Called at the end of every token. Sets `end`, `val`, and

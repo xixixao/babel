@@ -131,6 +131,7 @@ export default (superClass: Class<Parser>): Class<Parser> =>
       }
       ++this.state.curLine;
       this.state.lineStart = this.state.pos;
+      this.markIndent();
 
       return out;
     }
