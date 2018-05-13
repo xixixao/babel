@@ -503,6 +503,9 @@ export default class Tokenizer extends LocationParser {
       const comments = this.state.leadingComments;
       for (let i = comments.length - 1; i >= 0; i--) {
         const lastComment = comments[i];
+        if (lastComment.end < end) {
+          break;
+        }
         if (
           (commentMustBeOnSameLine &&
             lastComment.loc.start.line === loc.line) ||
